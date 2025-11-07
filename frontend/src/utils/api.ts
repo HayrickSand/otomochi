@@ -48,13 +48,18 @@ export const authApi = {
     return response.data;
   },
 
+  oauthLogin: async (provider: 'google' | 'twitter') => {
+    const response = await apiClient.post('/auth/oauth', { provider });
+    return response.data;
+  },
+
   logout: async () => {
     await apiClient.post('/auth/logout');
     localStorage.removeItem('access_token');
   },
 
   getCurrentUser: async (): Promise<User> => {
-    const response = await apiClient.get('/users/me');
+    const response = await apiClient.get('/auth/me');
     return response.data;
   },
 };
@@ -125,6 +130,40 @@ export const userApi = {
       plan_type: planType,
       auto_renew: autoRenew,
     });
+    return response.data;
+  },
+};
+
+// 課金・決済
+export const billingApi = {
+  createCheckout: async (planType: string) => {
+    const response = await apiClient.post('/billing/checkout', {
+      plan_type: planType,
+    });
+    return response.data;
+  },
+
+  createPortalSession: async () => {
+    const response = await apiClient.post('/billing/portal');
+    return response.data;
+  },
+
+  createOneshotPayment: async (hours: number) => {
+    const response = await apiClient.post('/billing/oneshot', null, {
+      params: { hours },
+    });
+    return response.data;
+  },
+
+  cancelSubscription: async (subscriptionId: string, atPeriodEnd = true) => {
+    const response = await apiClient.post('/billing/cancel-subscription', null, {
+      params: { subscription_id: subscriptionId, at_period_end: atPeriodEnd },
+    });
+    return response.data;
+  },
+
+  getConfig: async () => {
+    const response = await apiClient.get('/billing/config');
     return response.data;
   },
 };

@@ -9,7 +9,7 @@ import time
 import logging
 
 from .core.config import settings
-from .api import auth, transcription, user, admin
+from .api import auth, transcription, user, admin, billing
 
 # ロギング設定
 logging.basicConfig(
@@ -86,6 +86,7 @@ app.include_router(auth.router, prefix=f"{settings.API_PREFIX}/auth", tags=["認
 app.include_router(transcription.router, prefix=f"{settings.API_PREFIX}/transcriptions", tags=["書き起こし"])
 app.include_router(user.router, prefix=f"{settings.API_PREFIX}/users", tags=["ユーザー"])
 app.include_router(admin.router, prefix=f"{settings.API_PREFIX}/admin", tags=["管理者"])
+app.include_router(billing.router, prefix=f"{settings.API_PREFIX}/billing", tags=["課金・決済"])
 
 
 @app.get("/")

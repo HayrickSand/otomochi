@@ -40,6 +40,11 @@ class Settings(BaseSettings):
     # RunPod設定
     RUNPOD_API_KEY: str = ""
 
+    # Stripe設定
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_PUBLISHABLE_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+
     # Whisper設定
     WHISPER_MODEL: str = "large-v3-turbo"
     WHISPER_DEVICE: str = "cuda"
