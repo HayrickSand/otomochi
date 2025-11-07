@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  # Redis - ジョブキュー用
+  redis:
+    image: redis:7-alpine
+    container_name: otomochi-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - otomochi-network
+
+  # Backend - FastAPI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: otomochi-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ./backend:/app
+      - type: tmpfs
+        target: /tmp/ramdisk
+        tmpfs:
+          size: 10G  # RAM ディスク（10GB）
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - otomochi-network
+
+  # Celery Worker - 非同期ジョブ処理
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: otomochi-celery-worker
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=1
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ./backend:/app
+      - type: tmpfs
+        target: /tmp/ramdisk
+        tmpfs:
+          size: 10G
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - otomochi-network
+
+  # Frontend - React SPA
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: otomochi-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - otomochi-network
+
+volumes:
+  redis_data:
+
+networks:
+  otomochi-network:
+    driver: bridge
