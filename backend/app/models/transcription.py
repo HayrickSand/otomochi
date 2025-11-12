@@ -53,6 +53,7 @@ class Transcription(BaseModel):
     created_at: datetime
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
+    will_be_deleted_at: Optional[datetime] = None  # 削除予定日時（完了から8時間後）
 
     class Config:
         json_schema_extra = {

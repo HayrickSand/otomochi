@@ -60,6 +60,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
       - SECRET_KEY=${SECRET_KEY}
       - CUDA_VISIBLE_DEVICES=0
     volumes:
@@ -77,6 +78,26 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    networks:
+      - otomochi-network
+
+  # Celery Beat - 定期タスクスケジューラー
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: otomochi-celery-beat
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - redis
     networks:
       - otomochi-network
 

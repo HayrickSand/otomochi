@@ -3,6 +3,7 @@ Celery アプリケーション設定
 非同期ジョブ処理用
 """
 from celery import Celery
+from celery.schedules import crontab
 from ..core.config import settings
 
 # Celery アプリケーション
@@ -10,7 +11,7 @@ celery_app = Celery(
     "otomochi",
     broker=settings.REDIS_URL,
     backend=settings.REDIS_URL,
-    include=["app.tasks.transcription_tasks"]
+    include=["app.tasks.transcription_tasks", "app.tasks.cleanup_tasks"]
 )
 
 # Celery 設定
@@ -26,3 +27,11 @@ celery_app.conf.update(
     worker_prefetch_multiplier=1,  # GPU処理は1つずつ
     worker_max_tasks_per_child=10,  # メモリリーク対策
 )
+
+# Celery Beat スケジュール（定期タスク）
+celery_app.conf.beat_schedule = {
+    'cleanup-old-transcriptions': {
+        'task': 'app.tasks.cleanup_tasks.cleanup_old_transcriptions',
+        'schedule': crontab(minute='*/30'),  # 30分ごとに実行
+    },
+}
