@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Check, Zap, Clock, Shield, Sparkles, FileAudio, Brain, Star, Download, Users, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import type { User } from '../types';
 
 interface HomePageProps {
   user: User | null;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ user }) => {
+const HomePage: React.FC<HomePageProps> = ({ user: _user }) => {
   const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState<{ [key: string]: boolean }>({});
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
