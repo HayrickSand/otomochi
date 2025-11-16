@@ -17,7 +17,7 @@ interface AdminStats {
   monthly_profit: number;
 }
 
-export default function AdminPage({ user }: AdminPageProps) {
+export default function AdminPage({ user: _user }: AdminPageProps) {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
