@@ -4,7 +4,7 @@ import { authApi } from './utils/api';
 import type { User } from './types';
 
 // ページコンポーネント
-import HomePage from './pages/HomePage';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import TranscriptionPage from './pages/TranscriptionPage';
@@ -46,7 +46,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<HomePage user={user} />} />
+        <Route path="/" element={<LandingPage />} />
         <Route
           path="/login"
           element={user ? <Navigate to="/dashboard" /> : <LoginPage setUser={setUser} />}
