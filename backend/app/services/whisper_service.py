@@ -6,7 +6,7 @@ large-v3-turbo モデルを使用した高速・高精度な日本語書き起�
 import logging
 from typing import List, Optional
 from faster_whisper import WhisperModel
-import torch
+import subprocess
 
 from ..core.config import settings
 from ..models.transcription import TranscriptSegment
@@ -28,7 +28,7 @@ class WhisperService:
         self.compute_type = settings.WHISPER_COMPUTE_TYPE
 
         # CUDA 利用可能性チェック
-        if self.device == "cuda" and not torch.cuda.is_available():
+        if self.device == "cuda" and not self._is_cuda_available():
             logger.warning("CUDA is not available, falling back to CPU")
             self.device = "cpu"
             self.compute_type = "int8"
@@ -155,13 +155,28 @@ class WhisperService:
 
         return "、".join(trpg_terms) + "。"
 
+    def _is_cuda_available(self) -> bool:
+        """
+        CUDA利用可能性チェック（PyTorch不要）
+
+        nvidia-smiコマンドでGPUの存在を確認
+        """
+        try:
+            result = subprocess.run(
+                ['nvidia-smi'],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=5
+            )
+            return result.returncode == 0
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            return False
+
     def cleanup(self):
         """モデルをメモリから解放"""
         if self.model is not None:
             del self.model
             self.model = None
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
             logger.info("Whisper model cleaned up")
 
 
