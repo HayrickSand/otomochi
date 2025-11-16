@@ -57,11 +57,13 @@ CREATE TABLE IF NOT EXISTS public.transcriptions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     started_at TIMESTAMP WITH TIME ZONE,
     completed_at TIMESTAMP WITH TIME ZONE,
+    will_be_deleted_at TIMESTAMP WITH TIME ZONE,
 
     -- インデックス用
     INDEX idx_transcriptions_user_id (user_id),
     INDEX idx_transcriptions_status (status),
-    INDEX idx_transcriptions_created_at (created_at DESC)
+    INDEX idx_transcriptions_created_at (created_at DESC),
+    INDEX idx_transcriptions_will_be_deleted_at (will_be_deleted_at)
 );
 
 -- 使用量記録
@@ -87,6 +89,37 @@ CREATE TABLE IF NOT EXISTS public.usage_records (
 
     INDEX idx_usage_records_user_id (user_id),
     INDEX idx_usage_records_created_at (created_at DESC)
+);
+
+-- Stripe 顧客情報
+CREATE TABLE IF NOT EXISTS public.stripe_customers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+    stripe_customer_id TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    INDEX idx_stripe_customers_user_id (user_id),
+    INDEX idx_stripe_customers_stripe_id (stripe_customer_id)
+);
+
+-- Stripe サブスクリプション
+CREATE TABLE IF NOT EXISTS public.stripe_subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    stripe_subscription_id TEXT NOT NULL UNIQUE,
+    stripe_customer_id TEXT NOT NULL,
+    plan_type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    current_period_start TIMESTAMP WITH TIME ZONE,
+    current_period_end TIMESTAMP WITH TIME ZONE,
+    cancel_at_period_end BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    INDEX idx_stripe_subscriptions_user_id (user_id),
+    INDEX idx_stripe_subscriptions_stripe_id (stripe_subscription_id),
+    INDEX idx_stripe_subscriptions_status (status)
 );
 
 -- Row Level Security (RLS) 設定
@@ -146,6 +179,29 @@ CREATE POLICY "ユーザーは自分の使用量を閲覧可能"
 
 CREATE POLICY "管理者はすべての使用量を閲覧可能"
     ON public.usage_records FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.user_profiles
+            WHERE id = auth.uid() AND is_admin = TRUE
+        )
+    );
+
+-- stripe_customers
+ALTER TABLE public.stripe_customers ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "ユーザーは自分のStripe顧客情報を閲覧可能"
+    ON public.stripe_customers FOR SELECT
+    USING (auth.uid() = user_id);
+
+-- stripe_subscriptions
+ALTER TABLE public.stripe_subscriptions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "ユーザーは自分のサブスクリプションを閲覧可能"
+    ON public.stripe_subscriptions FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "管理者はすべてのサブスクリプションを閲覧可能"
+    ON public.stripe_subscriptions FOR SELECT
     USING (
         EXISTS (
             SELECT 1 FROM public.user_profiles
@@ -269,3 +325,6 @@ COMMENT ON TABLE public.user_profiles IS 'ユーザープロフィール拡張�
 COMMENT ON TABLE public.user_plans IS 'ユーザー課金プラン情報';
 COMMENT ON TABLE public.transcriptions IS '書き起こしジョブ';
 COMMENT ON TABLE public.usage_records IS '使用量記録（課金・統計用）';
+COMMENT ON TABLE public.stripe_customers IS 'Stripe顧客情報（Stripe Customer ID管理）';
+COMMENT ON TABLE public.stripe_subscriptions IS 'Stripeサブスクリプション情報';
+COMMENT ON COLUMN public.transcriptions.will_be_deleted_at IS '削除予定日時（完了から8時間後、プライバシー保護）';
