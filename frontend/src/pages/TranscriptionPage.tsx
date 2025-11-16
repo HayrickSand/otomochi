@@ -7,7 +7,7 @@ interface TranscriptionPageProps {
   user: User;
 }
 
-export default function TranscriptionPage({ user }: TranscriptionPageProps) {
+export default function TranscriptionPage({ user: _user }: TranscriptionPageProps) {
   const { id } = useParams<{ id: string }>();
   const [transcription, setTranscription] = useState<Transcription | null>(null);
   const [loading, setLoading] = useState(true);
