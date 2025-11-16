@@ -129,9 +129,9 @@ async def create_oneshot_payment(
 
 @router.post("/cancel-subscription")
 async def cancel_subscription(
+    current_user: Annotated[User, Depends(get_current_user_from_token)],
     subscription_id: str,
-    at_period_end: bool = True,
-    current_user: Annotated[User, Depends(get_current_user_from_token)]
+    at_period_end: bool = True
 ):
     """
     サブスクリプションをキャンセル
