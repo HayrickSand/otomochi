@@ -10,6 +10,7 @@ import DashboardPage from './pages/DashboardPage';
 import TranscriptionPage from './pages/TranscriptionPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import BillingPage from './pages/BillingPage';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -61,6 +62,10 @@ function App() {
         <Route
           path="/profile"
           element={user ? <ProfilePage user={user} setUser={setUser} /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/billing"
+          element={user ? <BillingPage user={user} /> : <Navigate to="/login" />}
         />
         <Route
           path="/admin"

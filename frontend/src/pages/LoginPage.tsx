@@ -35,6 +35,16 @@ export default function LoginPage({ setUser }: LoginPageProps) {
     }
   };
 
+  const handleOAuthLogin = async (provider: 'google' | 'twitter') => {
+    try {
+      const data = await authApi.oauthLogin(provider);
+      // OAuth URL にリダイレクト
+      window.location.href = data.url;
+    } catch (err: any) {
+      setError(`${provider} ログインに失敗しました`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="card max-w-md w-full">
@@ -93,10 +103,16 @@ export default function LoginPage({ setUser }: LoginPageProps) {
             または、ソーシャルログイン
           </p>
           <div className="space-y-2">
-            <button className="btn-secondary w-full">
+            <button
+              onClick={() => handleOAuthLogin('google')}
+              className="btn-secondary w-full"
+            >
               Googleでログイン
             </button>
-            <button className="btn-secondary w-full">
+            <button
+              onClick={() => handleOAuthLogin('twitter')}
+              className="btn-secondary w-full"
+            >
               Twitterでログイン
             </button>
           </div>

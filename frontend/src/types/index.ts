@@ -49,6 +49,8 @@ export interface Transcription {
   error_message?: string;
   created_at: string;
   completed_at?: string;
+  will_be_deleted_at?: string;  // 削除予定日時
+  time_until_deletion?: string;  // 削除までの残り時間
 }
 
 export interface TranscriptionListResponse {

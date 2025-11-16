@@ -35,6 +35,8 @@ class TranscriptionResponse(BaseModel):
     error_message: Optional[str] = None
     created_at: datetime
     completed_at: Optional[datetime] = None
+    will_be_deleted_at: Optional[datetime] = None  # 削除予定日時
+    time_until_deletion: Optional[str] = None  # 削除までの残り時間（人間が読みやすい形式）
 
 
 class TranscriptionListResponse(BaseModel):

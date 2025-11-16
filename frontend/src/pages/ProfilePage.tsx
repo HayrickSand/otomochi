@@ -105,9 +105,9 @@ export default function ProfilePage({ user, setUser }: ProfilePageProps) {
                 </div>
               </div>
             </div>
-            <button className="btn-secondary w-full">
+            <Link to="/billing" className="btn-secondary w-full block text-center">
               プランを変更
-            </button>
+            </Link>
           </div>
         </div>
 

@@ -138,6 +138,13 @@ cd backend
 celery -A app.tasks.celery_app worker --loglevel=info
 ```
 
+### Celery Beat 起動（定期タスク）
+
+```bash
+cd backend
+celery -A app.tasks.celery_app beat --loglevel=info
+```
+
 ---
 
 ## 📊 機能一覧
@@ -150,18 +157,21 @@ celery -A app.tasks.celery_app worker --loglevel=info
 - [x] Faster-Whisper 音声処理モジュール
 - [x] 音声前処理（ノイズ除去、正規化）
 - [x] Redis + Celery ジョブ管理
+- [x] Celery Beat 定期タスクスケジューラ
+- [x] 8時間後のデータ自動削除機能
 - [x] React フロントエンド基本構造
 - [x] TailwindCSS 配色テーマ (#de8f7d / #FFF4E9)
-- [x] ページコンポーネント（Home, Login, Dashboard, Transcription, Profile, Admin）
+- [x] ページコンポーネント（Home, Login, Dashboard, Transcription, Profile, Admin, Billing）
 - [x] 出力フォーマット（TXT, JSON, HTML）
 - [x] ミックスログ生成
+- [x] Supabase Auth 統合（OAuth: Google/Twitter + メール/パスワード）
+- [x] データベーススキーマ作成
+- [x] 課金プラン管理機能
+- [x] Stripe 連携（サブスクリプション + ワンショット課金）
+- [x] 削除予定時刻の表示とダウンロード促進UI
 
 ### 🚧 実装予定
 
-- [ ] Supabase Auth 統合
-- [ ] データベーススキーマ作成
-- [ ] 課金プラン管理機能
-- [ ] Stripe 連携
 - [ ] Discord Bot 連携
 - [ ] 話者分離機能
 - [ ] TRPG用語辞書管理UI
@@ -207,7 +217,12 @@ celery -A app.tasks.celery_app worker --loglevel=info
 
 - **データ保護**: 音声/テキストはクラウド非保存
 - **RAM処理**: 一時ファイルは RAM ディスクで処理、完了後削除
-- **認証**: Supabase Auth (OAuth + メール/パスワード)
+- **自動削除ポリシー**: 書き起こし完了から8時間後にデータを自動削除
+  - 完了した書き起こしは8時間後に自動削除されます
+  - フロントエンドに削除予定時刻と残り時間を表示
+  - ダウンロード推奨の警告バナーを表示
+  - Celery Beat による30分間隔の定期クリーンアップ
+- **認証**: Supabase Auth (OAuth: Google/Twitter + メール/パスワード)
 - **API保護**: JWT トークン認証
 
 ---
