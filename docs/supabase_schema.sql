@@ -57,13 +57,7 @@ CREATE TABLE IF NOT EXISTS public.transcriptions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     started_at TIMESTAMP WITH TIME ZONE,
     completed_at TIMESTAMP WITH TIME ZONE,
-    will_be_deleted_at TIMESTAMP WITH TIME ZONE,
-
-    -- インデックス用
-    INDEX idx_transcriptions_user_id (user_id),
-    INDEX idx_transcriptions_status (status),
-    INDEX idx_transcriptions_created_at (created_at DESC),
-    INDEX idx_transcriptions_will_be_deleted_at (will_be_deleted_at)
+    will_be_deleted_at TIMESTAMP WITH TIME ZONE
 );
 
 -- 使用量記録
@@ -85,10 +79,7 @@ CREATE TABLE IF NOT EXISTS public.usage_records (
     gpu_usage_time NUMERIC(10, 2) NOT NULL,
     estimated_cost NUMERIC(10, 4) NOT NULL,
 
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    INDEX idx_usage_records_user_id (user_id),
-    INDEX idx_usage_records_created_at (created_at DESC)
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Stripe 顧客情報
@@ -97,10 +88,7 @@ CREATE TABLE IF NOT EXISTS public.stripe_customers (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
     stripe_customer_id TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    INDEX idx_stripe_customers_user_id (user_id),
-    INDEX idx_stripe_customers_stripe_id (stripe_customer_id)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Stripe サブスクリプション
@@ -115,11 +103,7 @@ CREATE TABLE IF NOT EXISTS public.stripe_subscriptions (
     current_period_end TIMESTAMP WITH TIME ZONE,
     cancel_at_period_end BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    INDEX idx_stripe_subscriptions_user_id (user_id),
-    INDEX idx_stripe_subscriptions_stripe_id (stripe_subscription_id),
-    INDEX idx_stripe_subscriptions_status (status)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Row Level Security (RLS) 設定
@@ -316,9 +300,29 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- インデックス作成
+-- user_plans
 CREATE INDEX IF NOT EXISTS idx_user_plans_user_id ON public.user_plans(user_id);
+
+-- transcriptions
+CREATE INDEX IF NOT EXISTS idx_transcriptions_user_id ON public.transcriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_transcriptions_status ON public.transcriptions(status);
 CREATE INDEX IF NOT EXISTS idx_transcriptions_user_status ON public.transcriptions(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_transcriptions_created_at ON public.transcriptions(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_transcriptions_will_be_deleted_at ON public.transcriptions(will_be_deleted_at);
+
+-- usage_records
+CREATE INDEX IF NOT EXISTS idx_usage_records_user_id ON public.usage_records(user_id);
+CREATE INDEX IF NOT EXISTS idx_usage_records_created_at ON public.usage_records(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_usage_records_user_created ON public.usage_records(user_id, created_at DESC);
+
+-- stripe_customers
+CREATE INDEX IF NOT EXISTS idx_stripe_customers_user_id ON public.stripe_customers(user_id);
+CREATE INDEX IF NOT EXISTS idx_stripe_customers_stripe_id ON public.stripe_customers(stripe_customer_id);
+
+-- stripe_subscriptions
+CREATE INDEX IF NOT EXISTS idx_stripe_subscriptions_user_id ON public.stripe_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_stripe_subscriptions_stripe_id ON public.stripe_subscriptions(stripe_subscription_id);
+CREATE INDEX IF NOT EXISTS idx_stripe_subscriptions_status ON public.stripe_subscriptions(status);
 
 -- コメント
 COMMENT ON TABLE public.user_profiles IS 'ユーザープロフィール拡張情報';
